@@ -216,7 +216,6 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
       <select id="f-rol">
         <option value="Chofer">Chofer</option>
         <option value="Asistente">Asistente</option>
-        <option value="Coordinador">Coordinador</option>
       </select>
     </div>
   </div>
@@ -235,6 +234,16 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
   <div class="row2">
     <div class="field"><label>Marca / Modelo</label><input id="f-marca" type="text" placeholder="Ej. Isuzu NPR"></div>
     <div class="field"><label>Año</label><input id="f-año" type="text" placeholder="Ej. 2019" inputmode="numeric"></div>
+  </div>
+  <div class="row2">
+    <div class="field"><label>Capacidad de carga</label><input id="f-capacidad" type="text" placeholder="Ej. 3 ton, 1500 kg"></div>
+    <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end;">
+      <label>Thermo King</label>
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;" onclick="toggleThermo()">
+        <div id="thermo-dot" style="width:20px;height:20px;border-radius:50%;background:var(--border);transition:background .2s;flex-shrink:0;"></div>
+        <span id="thermo-label" style="font-size:14px;font-weight:600;">No tiene</span>
+      </div>
+    </div>
   </div>
 
   <div class="mactions">
@@ -278,23 +287,42 @@ const sv=d=>localStorage.setItem(KEY,JSON.stringify(d));
 const g=id=>document.getElementById(id);
 
 const SEED=[
-  {id:'d1',nombre:'Daniel Subero',    rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'NPR 01', placa:'',       marca:'Isuzu NPR',      año:'',ciPhoto:''},
-  {id:'d2',nombre:'Richard Hernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'NPR 02', placa:'',       marca:'Isuzu NPR',      año:'',ciPhoto:''},
-  {id:'d3',nombre:'Willmer Fernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Fuso 03',placa:'',       marca:'Mitsubishi Fuso',año:'',ciPhoto:''},
-  {id:'d4',nombre:'Néstor Daniel',    rol:'Chofer',      tel:'04127086120', ci:'',dir:'',unidad:'NPR 04', placa:'',       marca:'Isuzu NPR',      año:'',ciPhoto:''},
-  {id:'d5',nombre:'Jesús Lara',       rol:'Chofer',      tel:'04128669715', ci:'',dir:'',unidad:'L300 05',placa:'',       marca:'Mitsubishi L300',año:'',ciPhoto:''},
-  {id:'d6',nombre:'Jackson Hernández',rol:'Coordinador', tel:'',            ci:'',dir:'',unidad:'Jack 06',placa:'A88ET1M',marca:'JAC N75',        año:'',ciPhoto:''},
-  {id:'d7',nombre:'Darwin Serrano',   rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Jack 07',placa:'A80ET6M',marca:'JAC N75',        año:'',ciPhoto:''},
+  {id:'d1',nombre:'Daniel Subero',    rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'NPR 01', placa:'',       marca:'Isuzu NPR',      año:'',capacidad:'',thermo:false,ciPhoto:''},
+  {id:'d2',nombre:'Richard Hernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'NPR 02', placa:'',       marca:'Isuzu NPR',      año:'',capacidad:'',thermo:false,ciPhoto:''},
+  {id:'d3',nombre:'Willmer Fernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Fuso 03',placa:'',       marca:'Mitsubishi Fuso',año:'',capacidad:'',thermo:false,ciPhoto:''},
+  {id:'d4',nombre:'Néstor Daniel',    rol:'Chofer',      tel:'04127086120', ci:'',dir:'',unidad:'NPR 04', placa:'',       marca:'Isuzu NPR',      año:'',capacidad:'',thermo:false,ciPhoto:''},
+  {id:'d5',nombre:'Jesús Lara',       rol:'Chofer',      tel:'04128669715', ci:'',dir:'',unidad:'L300 05',placa:'',       marca:'Mitsubishi L300',año:'',capacidad:'',thermo:false,ciPhoto:''},
+  {id:'d6',nombre:'Jackson Hernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Jack 06',placa:'A88ET1M',marca:'JAC N75',        año:'',capacidad:'',thermo:false,ciPhoto:''},
+  {id:'d7',nombre:'Darwin Serrano',   rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Jack 07',placa:'A80ET6M',marca:'JAC N75',        año:'',capacidad:'',thermo:false,ciPhoto:''},
 ];
 
 let data=ld(); if(data.length===0){data=SEED;sv(data);}
-let editId=null, tempPhoto=null, cardCIId=null;
+// Migrar datos existentes
+data=data.map(d=>({
+  ...d,
+  rol:d.rol==='Coordinador'?'Chofer':d.rol,
+  capacidad:d.capacidad||'',
+  thermo:d.thermo||false,
+})); sv(data);
+let editId=null, tempPhoto=null, cardCIId=null, thermoVal=false;
+function toggleThermo(){
+  thermoVal=!thermoVal;
+  g('thermo-dot').style.background=thermoVal?'#00c9a7':'var(--border)';
+  g('thermo-label').textContent=thermoVal?'✅ Sí tiene':'No tiene';
+  g('thermo-label').style.color=thermoVal?'#00c9a7':'var(--muted)';
+}
+function setThermo(val){
+  thermoVal=!!val;
+  g('thermo-dot').style.background=thermoVal?'#00c9a7':'var(--border)';
+  g('thermo-label').textContent=thermoVal?'✅ Sí tiene':'No tiene';
+  g('thermo-label').style.color=thermoVal?'#00c9a7':'var(--muted)';
+}
 let selMode=false, selected=new Set();
 let multiFichas=[]; // [{id, url, nombre}]
 let fichaUrl=null;
 
 const ini=n=>n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
-const rc=r=>r==='Coordinador'?'#00c9a7':r==='Asistente'?'#f5a623':'#3b7eff';
+const rc=r=>r==='Asistente'?'#f5a623':'#3b7eff';
 const fv=(id,v)=>{g(id).value=v||'';};
 
 /* ── MODO SELECCIÓN ── */
@@ -350,6 +378,8 @@ function render(){
         ${d.ci?`<div class="info-row"><span class="iico">🪪</span><span class="ilabel">C.I.</span><span class="ival">${d.ci}</span></div>`:''}
         ${d.placa?`<div class="info-row"><span class="iico">🔖</span><span class="ilabel">Placa</span><span class="ival">${d.placa}</span></div>`:''}
         ${d.marca?`<div class="info-row"><span class="iico">🚛</span><span class="ival">${d.marca}${d.año?' · '+d.año:''}</span></div>`:''}
+        ${d.capacidad?`<div class="info-row"><span class="iico">⚖️</span><span class="ilabel">Carga</span><span class="ival">${d.capacidad}</span></div>`:''}
+        ${d.thermo?`<div class="info-row"><span class="iico">❄️</span><span class="ival" style="color:#00c9a7;font-weight:600;">Thermo King</span></div>`:''}
         ${d.dir?`<div class="info-row"><span class="iico">📍</span><span class="ival">${d.dir}</span></div>`:''}
         <div class="ci-thumb" onclick="event.stopPropagation();${selMode?`toggleCard('${d.id}')`:`openCICard('${d.id}')`}">
           ${d.ciPhoto?`<img src="${d.ciPhoto}" alt="CI"><div class="ci-hint">📷 Cambiar foto</div>`
@@ -381,8 +411,8 @@ function openModal(id){
   const e=id?data.find(d=>d.id===id):null;
   g('mtitle').textContent=e?'Editar integrante':'Nuevo integrante';
   g('btn-delete').style.display=e?'inline-flex':'none';
-  if(e){fv('f-nombre',e.nombre);fv('f-rol',e.rol);fv('f-tel',e.tel);fv('f-ci',e.ci);fv('f-dir',e.dir);fv('f-unidad',e.unidad);fv('f-placa',e.placa);fv('f-marca',e.marca);fv('f-año',e.año);setCIBlock(e.ciPhoto);}
-  else{['f-nombre','f-tel','f-ci','f-dir','f-unidad','f-placa','f-marca','f-año'].forEach(x=>fv(x,''));fv('f-rol','Chofer');setCIBlock(null);}
+  if(e){fv('f-nombre',e.nombre);fv('f-rol',e.rol);fv('f-tel',e.tel);fv('f-ci',e.ci);fv('f-dir',e.dir);fv('f-unidad',e.unidad);fv('f-placa',e.placa);fv('f-marca',e.marca);fv('f-año',e.año);fv('f-capacidad',e.capacidad);setThermo(e.thermo);setCIBlock(e.ciPhoto);}
+  else{['f-nombre','f-tel','f-ci','f-dir','f-unidad','f-placa','f-marca','f-año','f-capacidad'].forEach(x=>fv(x,''));fv('f-rol','Chofer');setThermo(false);setCIBlock(null);}
   g('overlay').classList.add('open');
 }
 function closeModal(){g('overlay').classList.remove('open');editId=null;tempPhoto=null;}
@@ -415,7 +445,8 @@ function saveEntry(){
   const entry={id:editId||('u'+Date.now()),nombre,rol:g('f-rol').value,
     tel:g('f-tel').value.trim(),ci:g('f-ci').value.trim(),dir:g('f-dir').value.trim(),
     unidad:g('f-unidad').value.trim(),placa:g('f-placa').value.trim().toUpperCase(),
-    marca:g('f-marca').value.trim(),año:g('f-año').value.trim(),ciPhoto};
+    marca:g('f-marca').value.trim(),año:g('f-año').value.trim(),
+    capacidad:g('f-capacidad').value.trim(),thermo:thermoVal,ciPhoto};
   if(editId){const i=data.findIndex(d=>d.id===editId);if(i>=0)data[i]=entry;}
   else data.push(entry);
   sv(data);render();closeModal();showToast('✓ Guardado');
@@ -467,7 +498,8 @@ async function buildFichaCanvas(d){
   const rows=[
     [{l:'Cédula',v:d.ci||'—'},{l:'Teléfono',v:d.tel||'—'}],
     [{l:'Unidad',v:d.unidad||'—'},{l:'Placa',v:d.placa||'—'}],
-    [{l:'Marca / Modelo',v:d.marca+(d.año?' ('+d.año+')':'')},{l:'Dirección',v:d.dir||'—'}],
+    [{l:'Marca / Modelo',v:d.marca+(d.año?' ('+d.año+')':'')},{l:'Cap. de carga',v:(d.capacidad||'—')+(d.thermo?' · ❄️ Thermo King':'')}],
+    [{l:'Dirección',v:d.dir||'—'},{l:'Thermo King',v:d.thermo?'✅ Sí tiene':'No tiene'}],
   ];
   rows.forEach((row,ri)=>{
     if(ri>0){ctx.strokeStyle='#252d42';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(182,y0+ri*stp-13);ctx.lineTo(W-22,y0+ri*stp-13);ctx.stroke();}
