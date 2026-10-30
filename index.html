@@ -237,6 +237,9 @@ html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var
   </div>
   <div class="row2">
     <div class="field"><label>Capacidad de carga</label><input id="f-capacidad" type="text" placeholder="Ej. 3 ton, 1500 kg"></div>
+    <div class="field"><label>Cestas de 2.2 kg (cantidad)</label><input id="f-cestas" type="text" inputmode="numeric" placeholder="Ej. 120"></div>
+  </div>
+  <div class="row2">
     <div class="field" style="display:flex;flex-direction:column;justify-content:flex-end;">
       <label>Thermo King</label>
       <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;cursor:pointer;" onclick="toggleThermo()">
@@ -287,13 +290,13 @@ const sv=d=>localStorage.setItem(KEY,JSON.stringify(d));
 const g=id=>document.getElementById(id);
 
 const SEED=[
-  {id:'d1',nombre:'Daniel Subero',    rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'NPR 01', placa:'',       marca:'Isuzu NPR',      año:'',capacidad:'',thermo:false,ciPhoto:''},
-  {id:'d2',nombre:'Richard Hernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'NPR 02', placa:'',       marca:'Isuzu NPR',      año:'',capacidad:'',thermo:false,ciPhoto:''},
-  {id:'d3',nombre:'Willmer Fernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Fuso 03',placa:'',       marca:'Mitsubishi Fuso',año:'',capacidad:'',thermo:false,ciPhoto:''},
-  {id:'d4',nombre:'Néstor Daniel',    rol:'Chofer',      tel:'04127086120', ci:'',dir:'',unidad:'NPR 04', placa:'',       marca:'Isuzu NPR',      año:'',capacidad:'',thermo:false,ciPhoto:''},
-  {id:'d5',nombre:'Jesús Lara',       rol:'Chofer',      tel:'04128669715', ci:'',dir:'',unidad:'L300 05',placa:'',       marca:'Mitsubishi L300',año:'',capacidad:'',thermo:false,ciPhoto:''},
-  {id:'d6',nombre:'Jackson Hernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Jack 06',placa:'A88ET1M',marca:'JAC N75',        año:'',capacidad:'',thermo:false,ciPhoto:''},
-  {id:'d7',nombre:'Darwin Serrano',   rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Jack 07',placa:'A80ET6M',marca:'JAC N75',        año:'',capacidad:'',thermo:false,ciPhoto:''},
+  {id:'d1',nombre:'Daniel Subero',    rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'NPR 01', placa:'',       marca:'Isuzu NPR',      año:'',capacidad:'',thermo:false,cestas:'',ciPhoto:''},
+  {id:'d2',nombre:'Richard Hernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'NPR 02', placa:'',       marca:'Isuzu NPR',      año:'',capacidad:'',thermo:false,cestas:'',ciPhoto:''},
+  {id:'d3',nombre:'Willmer Fernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Fuso 03',placa:'',       marca:'Mitsubishi Fuso',año:'',capacidad:'',thermo:false,cestas:'',ciPhoto:''},
+  {id:'d4',nombre:'Néstor Daniel',    rol:'Chofer',      tel:'04127086120', ci:'',dir:'',unidad:'NPR 04', placa:'',       marca:'Isuzu NPR',      año:'',capacidad:'',thermo:false,cestas:'',ciPhoto:''},
+  {id:'d5',nombre:'Jesús Lara',       rol:'Chofer',      tel:'04128669715', ci:'',dir:'',unidad:'L300 05',placa:'',       marca:'Mitsubishi L300',año:'',capacidad:'',thermo:false,cestas:'',ciPhoto:''},
+  {id:'d6',nombre:'Jackson Hernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Jack 06',placa:'A88ET1M',marca:'JAC N75',        año:'',capacidad:'',thermo:false,cestas:'',ciPhoto:''},
+  {id:'d7',nombre:'Darwin Serrano',   rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Jack 07',placa:'A80ET6M',marca:'JAC N75',        año:'',capacidad:'',thermo:false,cestas:'',ciPhoto:''},
 ];
 
 let data=ld(); if(data.length===0){data=SEED;sv(data);}
@@ -303,6 +306,7 @@ data=data.map(d=>({
   rol:d.rol==='Coordinador'?'Chofer':d.rol,
   capacidad:d.capacidad||'',
   thermo:d.thermo||false,
+  cestas:d.cestas||'',
 })); sv(data);
 let editId=null, tempPhoto=null, cardCIId=null, thermoVal=false;
 function toggleThermo(){
@@ -379,6 +383,7 @@ function render(){
         ${d.placa?`<div class="info-row"><span class="iico">🔖</span><span class="ilabel">Placa</span><span class="ival">${d.placa}</span></div>`:''}
         ${d.marca?`<div class="info-row"><span class="iico">🚛</span><span class="ival">${d.marca}${d.año?' · '+d.año:''}</span></div>`:''}
         ${d.capacidad?`<div class="info-row"><span class="iico">⚖️</span><span class="ilabel">Carga</span><span class="ival">${d.capacidad}</span></div>`:''}
+        ${d.cestas?`<div class="info-row"><span class="iico">🧺</span><span class="ilabel">Cestas 2.2kg</span><span class="ival">${d.cestas}</span></div>`:''}
         ${d.thermo?`<div class="info-row"><span class="iico">❄️</span><span class="ival" style="color:#00c9a7;font-weight:600;">Thermo King</span></div>`:''}
         ${d.dir?`<div class="info-row"><span class="iico">📍</span><span class="ival">${d.dir}</span></div>`:''}
         <div class="ci-thumb" onclick="event.stopPropagation();${selMode?`toggleCard('${d.id}')`:`openCICard('${d.id}')`}">
@@ -411,8 +416,8 @@ function openModal(id){
   const e=id?data.find(d=>d.id===id):null;
   g('mtitle').textContent=e?'Editar integrante':'Nuevo integrante';
   g('btn-delete').style.display=e?'inline-flex':'none';
-  if(e){fv('f-nombre',e.nombre);fv('f-rol',e.rol);fv('f-tel',e.tel);fv('f-ci',e.ci);fv('f-dir',e.dir);fv('f-unidad',e.unidad);fv('f-placa',e.placa);fv('f-marca',e.marca);fv('f-año',e.año);fv('f-capacidad',e.capacidad);setThermo(e.thermo);setCIBlock(e.ciPhoto);}
-  else{['f-nombre','f-tel','f-ci','f-dir','f-unidad','f-placa','f-marca','f-año','f-capacidad'].forEach(x=>fv(x,''));fv('f-rol','Chofer');setThermo(false);setCIBlock(null);}
+  if(e){fv('f-nombre',e.nombre);fv('f-rol',e.rol);fv('f-tel',e.tel);fv('f-ci',e.ci);fv('f-dir',e.dir);fv('f-unidad',e.unidad);fv('f-placa',e.placa);fv('f-marca',e.marca);fv('f-año',e.año);fv('f-capacidad',e.capacidad);fv('f-cestas',e.cestas);setThermo(e.thermo);setCIBlock(e.ciPhoto);}
+  else{['f-nombre','f-tel','f-ci','f-dir','f-unidad','f-placa','f-marca','f-año','f-capacidad','f-cestas'].forEach(x=>fv(x,''));fv('f-rol','Chofer');setThermo(false);setCIBlock(null);}
   g('overlay').classList.add('open');
 }
 function closeModal(){g('overlay').classList.remove('open');editId=null;tempPhoto=null;}
@@ -446,7 +451,7 @@ function saveEntry(){
     tel:g('f-tel').value.trim(),ci:g('f-ci').value.trim(),dir:g('f-dir').value.trim(),
     unidad:g('f-unidad').value.trim(),placa:g('f-placa').value.trim().toUpperCase(),
     marca:g('f-marca').value.trim(),año:g('f-año').value.trim(),
-    capacidad:g('f-capacidad').value.trim(),thermo:thermoVal,ciPhoto};
+    capacidad:g('f-capacidad').value.trim(),cestas:g('f-cestas').value.trim(),thermo:thermoVal,ciPhoto};
   if(editId){const i=data.findIndex(d=>d.id===editId);if(i>=0)data[i]=entry;}
   else data.push(entry);
   sv(data);render();closeModal();showToast('✓ Guardado');
@@ -498,8 +503,9 @@ async function buildFichaCanvas(d){
   const rows=[
     [{l:'Cédula',v:d.ci||'—'},{l:'Teléfono',v:d.tel||'—'}],
     [{l:'Unidad',v:d.unidad||'—'},{l:'Placa',v:d.placa||'—'}],
-    [{l:'Marca / Modelo',v:d.marca+(d.año?' ('+d.año+')':'')},{l:'Cap. de carga',v:(d.capacidad||'—')+(d.thermo?' · ❄️ Thermo King':'')}],
-    [{l:'Dirección',v:d.dir||'—'},{l:'Thermo King',v:d.thermo?'✅ Sí tiene':'No tiene'}],
+    [{l:'Marca / Modelo',v:d.marca+(d.año?' ('+d.año+')':'')},{l:'Cap. de carga',v:d.capacidad||'—'}],
+    [{l:'Cestas 2.2 kg',v:d.cestas?d.cestas+' cestas':'—'},{l:'Thermo King',v:d.thermo?'✅ Sí tiene':'No tiene'}],
+    [{l:'Dirección',v:d.dir||'—'},{l:'',v:''}],
   ];
   rows.forEach((row,ri)=>{
     if(ri>0){ctx.strokeStyle='#252d42';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(182,y0+ri*stp-13);ctx.lineTo(W-22,y0+ri*stp-13);ctx.stroke();}
