@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Directorio de Flota · Emporium</title>
+<style>
+:root{
+  --bg:#0f1117;--surface:#181c27;--card:#1e2333;--border:#2a3044;
+  --accent:#3b7eff;--accent2:#00c9a7;--text:#e8eaf0;--muted:#7a849a;
+  --danger:#ff4d6d;--warn:#f5a623;--radius:12px;--font:'Inter',system-ui,sans-serif;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:border-box;
+}
+@media(prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f0f2f7;--surface:#fff;--card:#fff;--border:#d4d9e8;--text:#1a1f2e;--muted:#6b7280;}}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;gap:11px;position:sticky;top:env(safe-area-inset-top,0);z-index:100;}
+.hlogo{width:34px;height:34px;background:var(--accent);border-radius:9px;display:grid;place-items:center;font-size:17px;flex-shrink:0;}
+.htitle{font-weight:700;font-size:15px;line-height:1.2;}
+.hsub{font-size:11px;color:var(--muted);}
+.hactions{margin-left:auto;display:flex;gap:7px;align-items:center;}
+
+/* SELECT TOOLBAR — aparece cuando hay selección */
+.sel-toolbar{
+  background:var(--accent);color:#fff;padding:11px 16px;
+  display:none;align-items:center;gap:10px;flex-wrap:wrap;
+  position:sticky;top:calc(env(safe-area-inset-top,0px) + 61px);z-index:99;
+}
+.sel-toolbar.show{display:flex;}
+.sel-count{font-weight:700;font-size:14px;flex:1;}
+.sel-actions{display:flex;gap:8px;flex-wrap:wrap;}
+
+/* BTN */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 13px;border-radius:8px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+.btn:active{opacity:.7;}
+.btn-primary{background:var(--accent);color:#fff;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-green{background:#25D366;color:#fff;}
+.btn-teal{background:var(--accent2);color:#fff;}
+.btn-white{background:#fff;color:#111;font-weight:700;}
+.btn-sm{padding:6px 10px;font-size:12px;}
+
+/* SEARCH */
+.search-bar{padding:9px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
+.search-wrap{position:relative;}
+.search-input{width:100%;padding:8px 14px 8px 34px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;}
+.search-input:focus{border-color:var(--accent);}
+.sico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none;}
+
+/* GRID */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:13px;padding:14px;}
+
+/* CARD */
+.driver-card{background:var(--card);border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color .18s,box-shadow .18s;position:relative;}
+.driver-card.selected{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)44;}
+.driver-card.selmode{cursor:pointer;}
+.driver-card.selmode .card-top,.driver-card.selmode .card-body{pointer-events:none;}
+
+/* Checkbox overlay */
+.sel-check{
+  position:absolute;top:10px;left:10px;
+  width:24px;height:24px;border-radius:50%;
+  background:var(--surface);border:2px solid var(--border);
+  display:none;align-items:center;justify-content:center;
+  font-size:14px;z-index:10;transition:background .15s,border-color .15s;
+}
+.selmode .sel-check{display:flex;}
+.driver-card.selected .sel-check{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+.card-top{display:flex;align-items:center;gap:11px;padding:13px 13px 9px;border-bottom:1px solid var(--border);}
+.avatar{width:50px;height:50px;border-radius:50%;background:var(--bg);border:2px solid var(--border);flex-shrink:0;display:grid;place-items:center;font-size:19px;font-weight:700;overflow:hidden;cursor:pointer;position:relative;}
+.avatar img{width:100%;height:100%;object-fit:cover;}
+.avatar-edit{position:absolute;inset:0;background:rgba(0,0,0,.5);display:none;place-items:center;border-radius:50%;font-size:15px;}
+.avatar:hover .avatar-edit{display:grid;}
+.card-name{font-weight:700;font-size:14px;}
+.card-role{font-size:11px;margin-top:2px;}
+.truck-badge{margin-left:auto;color:#fff;border-radius:7px;padding:3px 9px;font-size:11px;font-weight:700;white-space:nowrap;flex-shrink:0;}
+.card-body{padding:9px 13px 11px;display:flex;flex-direction:column;gap:6px;cursor:pointer;}
+.info-row{display:flex;align-items:flex-start;gap:6px;font-size:12px;}
+.iico{color:var(--muted);flex-shrink:0;width:15px;text-align:center;}
+.ilabel{color:var(--muted);margin-right:2px;}
+.ival{color:var(--text);}
+.ci-thumb{margin-top:3px;border:1.5px dashed var(--border);border-radius:7px;overflow:hidden;cursor:pointer;transition:border-color .2s;position:relative;}
+.ci-thumb:hover{border-color:var(--accent);}
+.ci-thumb img{width:100%;max-height:70px;object-fit:cover;display:block;}
+.ci-empty{padding:10px;text-align:center;color:var(--muted);font-size:11px;}
+.ci-empty span{font-size:18px;display:block;margin-bottom:2px;}
+.ci-hint{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);color:#fff;font-size:10px;font-weight:600;text-align:center;padding:2px;display:none;}
+.ci-thumb:hover .ci-hint{display:block;}
+.card-footer{padding:8px 11px;border-top:1px solid var(--border);display:flex;gap:7px;}
+.card-footer .btn{flex:1;justify-content:center;font-size:11px;padding:6px 8px;}
+
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty span{font-size:40px;display:block;margin-bottom:10px;}
+
+/* MODAL EDITAR */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:none;align-items:flex-end;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:560px;max-height:96vh;overflow-y:auto;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px));animation:sup .22s ease;}
+@keyframes sup{from{transform:translateY(28px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mhandle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 14px;}
+.mtitle{font-size:16px;font-weight:700;margin-bottom:14px;}
+.slabel{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.04em;margin-bottom:8px;}
+.field{margin-bottom:11px;}
+.field label{display:block;font-size:11px;color:var(--muted);margin-bottom:4px;font-weight:700;}
+.field input,.field select{width:100%;padding:9px 11px;background:var(--bg);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:14px;outline:none;-webkit-appearance:none;}
+.field input:focus,.field select:focus{border-color:var(--accent);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.sep{border-top:1px solid var(--border);margin:13px 0 11px;opacity:.4;}
+
+/* CI upload en modal */
+.ci-block{background:var(--bg);border:2px dashed var(--border);border-radius:11px;overflow:hidden;cursor:pointer;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:border-color .2s;position:relative;}
+.ci-block:hover{border-color:var(--accent);}
+.ci-block img{width:100%;max-height:180px;object-fit:contain;display:block;}
+.ci-ph{display:flex;flex-direction:column;align-items:center;gap:5px;padding:22px 14px;}
+.ci-ph .ico{font-size:32px;}
+.ci-ph .lbl{font-size:13px;font-weight:600;color:var(--text);}
+.ci-ph .hint{font-size:11px;color:var(--muted);}
+.ci-acts{display:flex;gap:7px;margin-top:7px;}
+.ci-acts .btn{flex:1;justify-content:center;}
+.mactions{display:flex;gap:9px;margin-top:14px;}
+.mactions .btn{flex:1;justify-content:center;padding:11px;}
+
+/* FICHA OVERLAY */
+.ficha-ov{position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:600;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:14px;overflow-y:auto;}
+.ficha-ov.open{display:flex;}
+#ficha-canvas{border-radius:12px;max-width:100%;display:block;box-shadow:0 6px 32px rgba(0,0,0,.6);}
+.fbtns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;}
+.fbtns .btn{padding:11px 16px;font-size:13px;}
+.fnote{font-size:11px;color:rgba(255,255,255,.35);text-align:center;}
+
+/* MULTI PREVIEW */
+.multi-ov{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:700;display:none;flex-direction:column;align-items:center;gap:10px;padding:14px;overflow-y:auto;}
+.multi-ov.open{display:flex;}
+.multi-header{color:#fff;font-weight:700;font-size:15px;text-align:center;}
+.multi-scroll{display:flex;flex-direction:column;gap:10px;width:100%;max-width:500px;align-items:center;}
+.multi-item{position:relative;width:100%;}
+.multi-item canvas{border-radius:10px;max-width:100%;display:block;box-shadow:0 4px 20px rgba(0,0,0,.5);}
+.multi-item-btn{position:absolute;top:7px;right:7px;background:#25D366;color:#fff;border:none;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;}
+.multi-btns{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;padding-bottom:20px;}
+.multi-btns .btn{padding:11px 16px;font-size:13px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--accent2);color:#fff;padding:9px 20px;border-radius:50px;font-weight:600;font-size:13px;z-index:9999;opacity:0;pointer-events:none;transition:opacity .3s;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+@media(max-width:460px){.grid{grid-template-columns:1fr;padding:9px;}.header{padding:11px 13px;}.row2{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hlogo">🚚</div>
+  <div><div class="htitle">Directorio de Flota</div><div class="hsub">Automercados Emporium</div></div>
+  <div class="hactions">
+    <button class="btn btn-ghost btn-sm" id="btn-selmode" onclick="toggleSelMode()">☑️ Seleccionar</button>
+    <button class="btn btn-primary btn-sm" onclick="openModal(null)">＋ Nuevo</button>
+  </div>
+</div>
+
+<!-- TOOLBAR DE SELECCIÓN -->
+<div class="sel-toolbar" id="sel-toolbar">
+  <div class="sel-count" id="sel-count">0 seleccionados</div>
+  <div class="sel-actions">
+    <button class="btn btn-white btn-sm" onclick="selectAll()">Todos</button>
+    <button class="btn btn-white btn-sm" onclick="clearSel()">Ninguno</button>
+    <button class="btn btn-green btn-sm" onclick="enviarSeleccion()">📲 Enviar por WhatsApp</button>
+    <button class="btn btn-white btn-sm" onclick="toggleSelMode()">✕ Cancelar</button>
+  </div>
+</div>
+
+<div class="search-bar">
+  <div class="search-wrap">
+    <span class="sico">🔍</span>
+    <input class="search-input" id="search" placeholder="Buscar nombre, placa, teléfono…" oninput="render()">
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty" style="display:none"><span>🔎</span>Sin resultados.</div>
+
+<!-- FILES OCULTOS -->
+<input type="file" id="ci-gallery" accept="image/*" style="display:none" onchange="onCIModal(event)">
+<input type="file" id="ci-camera" accept="image/*" capture="environment" style="display:none" onchange="onCIModal(event)">
+<input type="file" id="ci-card-file" accept="image/*" style="display:none" onchange="onCICard(event)">
+
+<!-- MODAL EDITAR -->
+<div class="overlay" id="overlay" onclick="closeIfOut(event)">
+ <div class="modal">
+  <div class="mhandle"></div>
+  <div class="mtitle" id="mtitle">Nuevo integrante</div>
+
+  <div class="slabel">📸 FOTO DOCUMENTO DE IDENTIDAD</div>
+  <div class="ci-block" id="ci-block" onclick="g('ci-gallery').click()">
+    <div class="ci-ph" id="ci-ph">
+      <div class="ico">🪪</div>
+      <div class="lbl">Seleccionar desde galería</div>
+      <div class="hint">Toca aquí para elegir la foto del documento</div>
+    </div>
+  </div>
+  <div class="ci-acts">
+    <button class="btn btn-primary" onclick="g('ci-gallery').click()">🖼 Galería</button>
+    <button class="btn btn-ghost" onclick="g('ci-camera').click()">📷 Cámara</button>
+    <button class="btn btn-danger" id="btn-del-ci" onclick="delCI()" style="display:none">🗑 Quitar</button>
+  </div>
+  <div style="font-size:11px;color:var(--muted);margin:4px 0 12px;">La foto se guarda localmente en este dispositivo.</div>
+
+  <div class="sep"></div>
+  <div class="slabel">👤 DATOS PERSONALES</div>
+  <div class="row2">
+    <div class="field"><label>Nombre completo</label><input id="f-nombre" type="text" placeholder="Ej. Daniel Subero" autocomplete="off"></div>
+    <div class="field"><label>Rol</label>
+      <select id="f-rol">
+        <option value="Chofer">Chofer</option>
+        <option value="Asistente">Asistente</option>
+        <option value="Coordinador">Coordinador</option>
+      </select>
+    </div>
+  </div>
+  <div class="row2">
+    <div class="field"><label>Teléfono</label><input id="f-tel" type="tel" placeholder="04XX-XXXXXXX"></div>
+    <div class="field"><label>Cédula (C.I.)</label><input id="f-ci" type="text" placeholder="V-XXXXXXXX"></div>
+  </div>
+  <div class="field"><label>Dirección / Zona de residencia</label><input id="f-dir" type="text" placeholder="Ej. Guarenas, Urb. Las Flores"></div>
+
+  <div class="sep"></div>
+  <div class="slabel">🚛 VEHÍCULO ASIGNADO</div>
+  <div class="row2">
+    <div class="field"><label>Unidad</label><input id="f-unidad" type="text" placeholder="Ej. NPR 01"></div>
+    <div class="field"><label>Placa</label><input id="f-placa" type="text" placeholder="Ej. A88ET1M" style="text-transform:uppercase"></div>
+  </div>
+  <div class="row2">
+    <div class="field"><label>Marca / Modelo</label><input id="f-marca" type="text" placeholder="Ej. Isuzu NPR"></div>
+    <div class="field"><label>Año</label><input id="f-año" type="text" placeholder="Ej. 2019" inputmode="numeric"></div>
+  </div>
+
+  <div class="mactions">
+    <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    <button class="btn btn-danger" id="btn-delete" onclick="deleteEntry()" style="display:none">Eliminar</button>
+    <button class="btn btn-primary" onclick="saveEntry()">💾 Guardar</button>
+  </div>
+ </div>
+</div>
+
+<!-- FICHA ÚNICA -->
+<div class="ficha-ov" id="ficha-ov" onclick="closeFichaOut(event)">
+  <canvas id="ficha-canvas"></canvas>
+  <div class="fbtns">
+    <button class="btn btn-ghost" onclick="closeFicha()">✕ Cerrar</button>
+    <button class="btn btn-teal" onclick="downloadFicha()">⬇️ Guardar</button>
+    <button class="btn btn-green" onclick="shareWA()">📲 WhatsApp</button>
+  </div>
+  <div class="fnote">Android: abre compartir directo · iPhone: guarda y adjunta en WhatsApp</div>
+</div>
+
+<!-- MULTI FICHAS -->
+<div class="multi-ov" id="multi-ov">
+  <div class="multi-header" id="multi-header">Fichas generadas</div>
+  <div class="multi-scroll" id="multi-scroll"></div>
+  <div class="multi-btns">
+    <button class="btn btn-ghost" onclick="closeMulti()">✕ Cerrar</button>
+    <button class="btn btn-teal" onclick="downloadAll()">⬇️ Guardar todas</button>
+    <button class="btn btn-green" onclick="shareAll()">📲 Enviar todas por WhatsApp</button>
+  </div>
+  <div class="fnote" style="color:rgba(255,255,255,.3);padding-bottom:10px;">Toca "📲 WhatsApp" en cada ficha para enviarla individualmente, o "Enviar todas" para enviarlas juntas</div>
+</div>
+
+<canvas id="off-cv" style="display:none"></canvas>
+<div class="toast" id="toast"></div>
+
+<script>
+const KEY='emp:flota:dir:v3';
+const ld=()=>{try{return JSON.parse(localStorage.getItem(KEY))||[];}catch{return[];}};
+const sv=d=>localStorage.setItem(KEY,JSON.stringify(d));
+const g=id=>document.getElementById(id);
+
+const SEED=[
+  {id:'d1',nombre:'Daniel Subero',    rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'NPR 01', placa:'',       marca:'Isuzu NPR',      año:'',ciPhoto:''},
+  {id:'d2',nombre:'Richard Hernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'NPR 02', placa:'',       marca:'Isuzu NPR',      año:'',ciPhoto:''},
+  {id:'d3',nombre:'Willmer Fernández',rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Fuso 03',placa:'',       marca:'Mitsubishi Fuso',año:'',ciPhoto:''},
+  {id:'d4',nombre:'Néstor Daniel',    rol:'Chofer',      tel:'04127086120', ci:'',dir:'',unidad:'NPR 04', placa:'',       marca:'Isuzu NPR',      año:'',ciPhoto:''},
+  {id:'d5',nombre:'Jesús Lara',       rol:'Chofer',      tel:'04128669715', ci:'',dir:'',unidad:'L300 05',placa:'',       marca:'Mitsubishi L300',año:'',ciPhoto:''},
+  {id:'d6',nombre:'Jackson Hernández',rol:'Coordinador', tel:'',            ci:'',dir:'',unidad:'Jack 06',placa:'A88ET1M',marca:'JAC N75',        año:'',ciPhoto:''},
+  {id:'d7',nombre:'Darwin Serrano',   rol:'Chofer',      tel:'',            ci:'',dir:'',unidad:'Jack 07',placa:'A80ET6M',marca:'JAC N75',        año:'',ciPhoto:''},
+];
+
+let data=ld(); if(data.length===0){data=SEED;sv(data);}
+let editId=null, tempPhoto=null, cardCIId=null;
+let selMode=false, selected=new Set();
+let multiFichas=[]; // [{id, url, nombre}]
+let fichaUrl=null;
+
+const ini=n=>n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+const rc=r=>r==='Coordinador'?'#00c9a7':r==='Asistente'?'#f5a623':'#3b7eff';
+const fv=(id,v)=>{g(id).value=v||'';};
+
+/* ── MODO SELECCIÓN ── */
+function toggleSelMode(){
+  selMode=!selMode;
+  selected.clear();
+  g('btn-selmode').textContent=selMode?'✕ Cancelar':'☑️ Seleccionar';
+  g('btn-selmode').className=selMode?'btn btn-danger btn-sm':'btn btn-ghost btn-sm';
+  updateToolbar();
+  render();
+}
+function updateToolbar(){
+  const tb=g('sel-toolbar');
+  tb.classList.toggle('show', selMode);
+  g('sel-count').textContent=selected.size===0?'Toca las tarjetas para seleccionar':`${selected.size} seleccionado${selected.size>1?'s':''}`;
+}
+function selectAll(){
+  const q=g('search').value.toLowerCase();
+  data.filter(d=>!q||[d.nombre,d.placa,d.tel,d.ci,d.unidad].join(' ').toLowerCase().includes(q))
+      .forEach(d=>selected.add(d.id));
+  updateToolbar(); render();
+}
+function clearSel(){ selected.clear(); updateToolbar(); render(); }
+
+function toggleCard(id){
+  if(!selMode) return;
+  selected.has(id)?selected.delete(id):selected.add(id);
+  updateToolbar(); render();
+}
+
+/* ── RENDER ── */
+function render(){
+  const q=g('search').value.toLowerCase();
+  const list=data.filter(d=>!q||[d.nombre,d.placa,d.tel,d.ci,d.unidad].join(' ').toLowerCase().includes(q));
+  g('empty').style.display=list.length?'none':'block';
+  g('grid').innerHTML=list.map(d=>{
+    const c=rc(d.rol), isSel=selected.has(d.id);
+    return`<div class="driver-card${selMode?' selmode':''}${isSel?' selected':''}" onclick="${selMode?`toggleCard('${d.id}')`:''}" >
+      <div class="sel-check">${isSel?'✓':''}</div>
+      <div class="card-top" ${selMode?'':'onclick="openModal(\''+d.id+'\')"'}>
+        <div class="avatar" onclick="event.stopPropagation();${selMode?`toggleCard('${d.id}')`:`openCICard('${d.id}')`}">
+          ${d.ciPhoto?`<img src="${d.ciPhoto}" alt="">`:` <span style="color:${c}">${ini(d.nombre)}</span>`}
+          ${selMode?'':`<div class="avatar-edit">📷</div>`}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div class="card-name">${d.nombre}</div>
+          <div class="card-role" style="color:${c}">${d.rol}</div>
+        </div>
+        ${d.unidad?`<div class="truck-badge" style="background:${c}">${d.unidad}</div>`:''}
+      </div>
+      <div class="card-body" ${selMode?'':'onclick="openModal(\''+d.id+'\')"'}>
+        ${d.tel?`<div class="info-row"><span class="iico">📞</span><span class="ival">${d.tel}</span></div>`:''}
+        ${d.ci?`<div class="info-row"><span class="iico">🪪</span><span class="ilabel">C.I.</span><span class="ival">${d.ci}</span></div>`:''}
+        ${d.placa?`<div class="info-row"><span class="iico">🔖</span><span class="ilabel">Placa</span><span class="ival">${d.placa}</span></div>`:''}
+        ${d.marca?`<div class="info-row"><span class="iico">🚛</span><span class="ival">${d.marca}${d.año?' · '+d.año:''}</span></div>`:''}
+        ${d.dir?`<div class="info-row"><span class="iico">📍</span><span class="ival">${d.dir}</span></div>`:''}
+        <div class="ci-thumb" onclick="event.stopPropagation();${selMode?`toggleCard('${d.id}')`:`openCICard('${d.id}')`}">
+          ${d.ciPhoto?`<img src="${d.ciPhoto}" alt="CI"><div class="ci-hint">📷 Cambiar foto</div>`
+            :`<div class="ci-empty"><span>🪪</span>Toca para agregar foto</div>`}
+        </div>
+      </div>
+      ${selMode?'':`
+      <div class="card-footer">
+        <button class="btn btn-ghost" onclick="openModal('${d.id}')">✏️ Editar</button>
+        <button class="btn btn-green" onclick="generarFicha('${d.id}')">📤 Ficha</button>
+      </div>`}
+    </div>`;
+  }).join('');
+}
+
+/* ── CI desde tarjeta ── */
+function openCICard(id){ cardCIId=id; g('ci-card-file').click(); }
+function onCICard(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{const i=data.findIndex(d=>d.id===cardCIId);if(i>=0){data[i].ciPhoto=ev.target.result;sv(data);render();showToast('✓ Foto guardada');}};
+  r.readAsDataURL(f); e.target.value='';
+}
+
+/* ── MODAL ── */
+function openModal(id){
+  if(selMode) return;
+  editId=id; tempPhoto=null;
+  const e=id?data.find(d=>d.id===id):null;
+  g('mtitle').textContent=e?'Editar integrante':'Nuevo integrante';
+  g('btn-delete').style.display=e?'inline-flex':'none';
+  if(e){fv('f-nombre',e.nombre);fv('f-rol',e.rol);fv('f-tel',e.tel);fv('f-ci',e.ci);fv('f-dir',e.dir);fv('f-unidad',e.unidad);fv('f-placa',e.placa);fv('f-marca',e.marca);fv('f-año',e.año);setCIBlock(e.ciPhoto);}
+  else{['f-nombre','f-tel','f-ci','f-dir','f-unidad','f-placa','f-marca','f-año'].forEach(x=>fv(x,''));fv('f-rol','Chofer');setCIBlock(null);}
+  g('overlay').classList.add('open');
+}
+function closeModal(){g('overlay').classList.remove('open');editId=null;tempPhoto=null;}
+function closeIfOut(e){if(e.target===g('overlay'))closeModal();}
+
+function setCIBlock(src){
+  const block=g('ci-block'), ph=g('ci-ph'), btnDel=g('btn-del-ci');
+  block.querySelectorAll('img').forEach(i=>i.remove());
+  if(src){
+    const img=document.createElement('img');img.src=src;img.alt='CI';
+    block.insertBefore(img,block.firstChild);
+    ph.style.display='none'; btnDel.style.display='inline-flex';
+  } else { ph.style.display='flex'; btnDel.style.display='none'; }
+}
+function onCIModal(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{tempPhoto=ev.target.result;setCIBlock(tempPhoto);};
+  r.readAsDataURL(f); e.target.value='';
+}
+function delCI(){tempPhoto='__del__';setCIBlock(null);}
+
+function saveEntry(){
+  const nombre=g('f-nombre').value.trim();
+  if(!nombre){showToast('⚠️ Escribe el nombre');return;}
+  let ciPhoto='';
+  if(tempPhoto==='__del__') ciPhoto='';
+  else if(tempPhoto) ciPhoto=tempPhoto;
+  else if(editId) ciPhoto=(data.find(d=>d.id===editId)||{}).ciPhoto||'';
+  const entry={id:editId||('u'+Date.now()),nombre,rol:g('f-rol').value,
+    tel:g('f-tel').value.trim(),ci:g('f-ci').value.trim(),dir:g('f-dir').value.trim(),
+    unidad:g('f-unidad').value.trim(),placa:g('f-placa').value.trim().toUpperCase(),
+    marca:g('f-marca').value.trim(),año:g('f-año').value.trim(),ciPhoto};
+  if(editId){const i=data.findIndex(d=>d.id===editId);if(i>=0)data[i]=entry;}
+  else data.push(entry);
+  sv(data);render();closeModal();showToast('✓ Guardado');
+}
+function deleteEntry(){
+  if(!editId||!confirm('¿Eliminar a '+(data.find(d=>d.id===editId)||{}).nombre+'?')) return;
+  data=data.filter(d=>d.id!==editId);sv(data);render();closeModal();showToast('Eliminado');
+}
+
+/* ── CANVAS helpers ── */
+async function buildFichaCanvas(d){
+  const W=820, H=d.ciPhoto?580:455;
+  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  const ac=rc(d.rol);
+
+  ctx.fillStyle='#0d1019'; ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=ac; ctx.fillRect(0,0,W,7);
+  ctx.fillStyle=ac+'28'; ctx.fillRect(0,0,5,H);
+
+  ctx.fillStyle='#fff'; ctx.font='bold 12px sans-serif';
+  ctx.fillText('🚚  AUTOMERCADOS EMPORIUM — Departamento de Transporte',22,33);
+  ctx.strokeStyle='#252d42'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(22,44);ctx.lineTo(W-22,44);ctx.stroke();
+
+  // avatar
+  ctx.save();
+  ctx.beginPath();ctx.arc(94,116,60,0,Math.PI*2);ctx.clip();
+  if(d.ciPhoto){await dimg(ctx,d.ciPhoto,34,56,120,120);}
+  else{
+    ctx.fillStyle=ac+'33';ctx.fillRect(34,56,120,120);
+    ctx.fillStyle=ac;ctx.font='bold 44px sans-serif';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(ini(d.nombre),94,116);
+    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  }
+  ctx.restore();
+  ctx.strokeStyle=ac;ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(94,116,60,0,Math.PI*2);ctx.stroke();
+
+  ctx.fillStyle='#fff';ctx.font='bold 25px sans-serif';
+  ctx.fillText(d.nombre,182,87);
+  ctx.fillStyle=ac+'33';
+  rrect(ctx,182,96,ctx.measureText(d.rol).width+22,25,6);
+  ctx.fillStyle=ac;ctx.font='bold 12px sans-serif';
+  ctx.fillText(d.rol,193,113);
+
+  const c1=182,c2=505,y0=155,stp=43;
+  const rows=[
+    [{l:'Cédula',v:d.ci||'—'},{l:'Teléfono',v:d.tel||'—'}],
+    [{l:'Unidad',v:d.unidad||'—'},{l:'Placa',v:d.placa||'—'}],
+    [{l:'Marca / Modelo',v:d.marca+(d.año?' ('+d.año+')':'')},{l:'Dirección',v:d.dir||'—'}],
+  ];
+  rows.forEach((row,ri)=>{
+    if(ri>0){ctx.strokeStyle='#252d42';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(182,y0+ri*stp-13);ctx.lineTo(W-22,y0+ri*stp-13);ctx.stroke();}
+    row.forEach((item,ci)=>{
+      const x=ci===0?c1:c2,y=y0+ri*stp;
+      ctx.fillStyle='#6b7794';ctx.font='10px sans-serif';ctx.fillText(item.l.toUpperCase(),x,y);
+      ctx.fillStyle='#e8eaf0';ctx.font='bold 14px sans-serif';
+      ctx.fillText(item.v.length>33?item.v.slice(0,31)+'…':item.v,x,y+17);
+    });
+  });
+  ctx.strokeStyle='#252d42';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(485,y0-7);ctx.lineTo(485,y0+rows.length*stp-10);ctx.stroke();
+
+  if(d.ciPhoto){
+    const cy=y0+rows.length*stp+12;
+    ctx.fillStyle='#1a2035';rrect(ctx,22,cy,W-44,108,10);
+    ctx.fillStyle='#6b7794';ctx.font='10px sans-serif';ctx.fillText('DOCUMENTO DE IDENTIDAD',36,cy+17);
+    await dimg(ctx,d.ciPhoto,36,cy+21,W-44-28,78,'contain');
+  }
+
+  const fecha=new Date().toLocaleDateString('es-VE',{day:'2-digit',month:'long',year:'numeric'});
+  ctx.fillStyle='#6b7794';ctx.font='10px sans-serif';
+  ctx.fillText('Generado: '+fecha+' · Dpto. Transporte · Emporium',22,H-11);
+
+  return cv;
+}
+
+async function dimg(ctx,src,x,y,w,h,mode){
+  return new Promise(res=>{
+    const img=new Image();
+    img.onload=()=>{
+      const r=mode==='contain'?Math.min(w/img.width,h/img.height):Math.max(w/img.width,h/img.height);
+      const dw=img.width*r,dh=img.height*r;
+      ctx.drawImage(img,x+(w-dw)/2,y+(h-dh)/2,dw,dh);res();
+    };img.onerror=res;img.src=src;
+  });
+}
+function rrect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();ctx.fill();
+}
+
+/* ── FICHA ÚNICA ── */
+fichaUrl=null;
+async function generarFicha(id){
+  const d=data.find(x=>x.id===id);if(!d)return;
+  showToast('⏳ Generando ficha…');
+  const cv=await buildFichaCanvas(d);
+  fichaUrl=cv.toDataURL('image/png');
+  const dc=g('ficha-canvas');
+  const mw=Math.min(window.innerWidth-24,820);
+  const sc=mw/820;
+  dc.width=cv.width*sc;dc.height=cv.height*sc;
+  const dx=dc.getContext('2d');dx.scale(sc,sc);dx.drawImage(cv,0,0);
+  g('ficha-ov').classList.add('open');
+}
+function closeFicha(){g('ficha-ov').classList.remove('open');fichaUrl=null;}
+function closeFichaOut(e){if(e.target===g('ficha-ov'))closeFicha();}
+function downloadFicha(){
+  if(!fichaUrl)return;
+  const a=document.createElement('a');a.href=fichaUrl;a.download='ficha-emporium.png';a.click();
+  showToast('✓ Imagen guardada');
+}
+async function shareWA(url){
+  const u=url||fichaUrl; if(!u)return;
+  if(navigator.share&&navigator.canShare){
+    try{
+      const blob=await(await fetch(u)).blob();
+      const file=new File([blob],'ficha-emporium.png',{type:'image/png'});
+      if(navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Ficha Flota Emporium'});return;}
+    }catch(e){}
+  }
+  const a=document.createElement('a');a.href=u;a.download='ficha-emporium.png';a.click();
+  setTimeout(()=>window.open('https://wa.me/','_blank'),700);
+  showToast('📲 Guarda la imagen y adjúntala en WhatsApp');
+}
+
+/* ── ENVIAR SELECCIÓN ── */
+async function enviarSeleccion(){
+  if(selected.size===0){showToast('⚠️ Selecciona al menos una persona');return;}
+  showToast('⏳ Generando fichas…');
+  const ids=[...selected];
+  multiFichas=[];
+  for(const id of ids){
+    const d=data.find(x=>x.id===id);if(!d)continue;
+    const cv=await buildFichaCanvas(d);
+    multiFichas.push({id,nombre:d.nombre,url:cv.toDataURL('image/png'),cv});
+  }
+  mostrarMulti();
+}
+
+function mostrarMulti(){
+  g('multi-header').textContent=`${multiFichas.length} ficha${multiFichas.length>1?'s':''} generada${multiFichas.length>1?'s':''}`;
+  const scroll=g('multi-scroll');
+  scroll.innerHTML='';
+  multiFichas.forEach((f,i)=>{
+    const wrap=document.createElement('div');wrap.className='multi-item';
+    const cv=document.createElement('canvas');
+    const mw=Math.min(window.innerWidth-28,820);
+    const sc=mw/820;
+    cv.width=f.cv.width*sc;cv.height=f.cv.height*sc;
+    const ctx=cv.getContext('2d');ctx.scale(sc,sc);ctx.drawImage(f.cv,0,0);
+    const lbl=document.createElement('div');
+    lbl.style.cssText='color:#fff;font-size:12px;font-weight:700;padding:0 0 5px 2px;';
+    lbl.textContent=f.nombre;
+    const btns=document.createElement('div');
+    btns.style.cssText='display:flex;gap:7px;margin-top:7px;';
+    btns.innerHTML=`
+      <button class="btn btn-teal btn-sm" style="flex:1" onclick="downloadOne(${i})">⬇️ Guardar</button>
+      <button class="btn btn-green btn-sm" style="flex:1" onclick="shareOne(${i})">📲 WhatsApp</button>
+    `;
+    wrap.append(lbl,cv,btns);
+    scroll.appendChild(wrap);
+  });
+  g('multi-ov').classList.add('open');
+}
+function closeMulti(){g('multi-ov').classList.remove('open');multiFichas=[];}
+
+function downloadOne(i){
+  const f=multiFichas[i];if(!f)return;
+  const a=document.createElement('a');a.href=f.url;a.download=`ficha-${f.nombre.replace(/\s+/g,'-')}.png`;a.click();
+  showToast('✓ Guardada: '+f.nombre);
+}
+async function shareOne(i){
+  const f=multiFichas[i];if(!f)return;
+  await shareWA(f.url);
+}
+async function downloadAll(){
+  for(let i=0;i<multiFichas.length;i++){
+    downloadOne(i);
+    await new Promise(r=>setTimeout(r,400));
+  }
+  showToast('✓ Todas las fichas guardadas');
+}
+async function shareAll(){
+  if(navigator.share&&navigator.canShare){
+    try{
+      const files=[];
+      for(const f of multiFichas){
+        const blob=await(await fetch(f.url)).blob();
+        files.push(new File([blob],`ficha-${f.nombre.replace(/\s+/g,'-')}.png`,{type:'image/png'}));
+      }
+      if(navigator.canShare({files})){await navigator.share({files,title:'Fichas Flota Emporium'});return;}
+    }catch(e){}
+  }
+  // Fallback: descargar una por una y abrir WhatsApp
+  await downloadAll();
+  setTimeout(()=>window.open('https://wa.me/','_blank'),800);
+  showToast('📲 Guarda las imágenes y adjúntalas en WhatsApp');
+}
+
+function showToast(msg){
+  const t=g('toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._to);t._to=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+render();
+</script>
+</body>
+</html>
