@@ -463,71 +463,175 @@ function deleteEntry(){
 
 /* ── CANVAS helpers ── */
 async function buildFichaCanvas(d){
-  const W=820, H=d.ciPhoto?580:455;
-  const cv=document.createElement('canvas'); cv.width=W; cv.height=H;
+  const W=900, H=520;
+  const cv=document.createElement('canvas');
+  cv.width=W*2; cv.height=H*2; // retina
   const ctx=cv.getContext('2d');
+  ctx.scale(2,2);
   const ac=rc(d.rol);
 
-  ctx.fillStyle='#0d1019'; ctx.fillRect(0,0,W,H);
-  ctx.fillStyle=ac; ctx.fillRect(0,0,W,7);
-  ctx.fillStyle=ac+'28'; ctx.fillRect(0,0,5,H);
+  // ── FONDO GRADIENTE ──
+  const grad=ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,'#0a0f1e');
+  grad.addColorStop(1,'#111827');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
 
-  ctx.fillStyle='#fff'; ctx.font='bold 12px sans-serif';
-  ctx.fillText('🚚  AUTOMERCADOS EMPORIUM — Departamento de Transporte',22,33);
-  ctx.strokeStyle='#252d42'; ctx.lineWidth=1;
-  ctx.beginPath();ctx.moveTo(22,44);ctx.lineTo(W-22,44);ctx.stroke();
+  // ── FRANJA SUPERIOR COLOREADA ──
+  const hg=ctx.createLinearGradient(0,0,W,0);
+  hg.addColorStop(0,ac);
+  hg.addColorStop(1,ac+'99');
+  ctx.fillStyle=hg; ctx.fillRect(0,0,W,72);
 
-  // avatar
+  // Logo texto empresa
+  ctx.fillStyle='#ffffff';
+  ctx.font='bold 11px sans-serif';
+  ctx.letterSpacing='2px';
+  ctx.fillText('AUTOMERCADOS EMPORIUM',20,26);
+  ctx.font='10px sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.75)';
+  ctx.fillText('Departamento de Transporte',20,42);
+
+  // Texto FICHA PERSONAL derecha
+  ctx.fillStyle='rgba(255,255,255,0.9)';
+  ctx.font='bold 13px sans-serif';
+  ctx.textAlign='right';
+  ctx.fillText('FICHA PERSONAL',W-20,28);
+  ctx.font='10px sans-serif';
+  ctx.fillStyle='rgba(255,255,255,0.6)';
+  ctx.fillText('Flota de Transporte',W-20,44);
+  ctx.textAlign='left';
+
+  // Línea decorativa bajo header
+  ctx.strokeStyle=ac; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(0,72); ctx.lineTo(W,72); ctx.stroke();
+
+  // ── PANEL IZQUIERDO (foto + nombre) ──
+  const panelW=220;
+
+  // Fondo panel izq
+  ctx.fillStyle='rgba(255,255,255,0.03)';
+  ctx.fillRect(0,72,panelW,H-72);
+  ctx.strokeStyle='rgba(255,255,255,0.06)';
+  ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(panelW,72); ctx.lineTo(panelW,H); ctx.stroke();
+
+  // Avatar grande
+  const cx2=panelW/2, cy2=155, cr=62;
+  // Sombra
+  ctx.shadowColor=ac+'66'; ctx.shadowBlur=20;
+  ctx.strokeStyle=ac; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(cx2,cy2,cr+3,0,Math.PI*2); ctx.stroke();
+  ctx.shadowBlur=0;
+
   ctx.save();
-  ctx.beginPath();ctx.arc(94,116,60,0,Math.PI*2);ctx.clip();
-  if(d.ciPhoto){await dimg(ctx,d.ciPhoto,34,56,120,120);}
-  else{
-    ctx.fillStyle=ac+'33';ctx.fillRect(34,56,120,120);
-    ctx.fillStyle=ac;ctx.font='bold 44px sans-serif';
-    ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.fillText(ini(d.nombre),94,116);
-    ctx.textAlign='left';ctx.textBaseline='alphabetic';
+  ctx.beginPath(); ctx.arc(cx2,cy2,cr,0,Math.PI*2); ctx.clip();
+  if(d.ciPhoto){
+    await dimg(ctx,d.ciPhoto,cx2-cr,cy2-cr,cr*2,cr*2);
+  } else {
+    const ag=ctx.createRadialGradient(cx2,cy2,0,cx2,cy2,cr);
+    ag.addColorStop(0,ac+'55'); ag.addColorStop(1,ac+'22');
+    ctx.fillStyle=ag; ctx.fillRect(cx2-cr,cy2-cr,cr*2,cr*2);
+    ctx.fillStyle=ac; ctx.font='bold 42px sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(ini(d.nombre),cx2,cy2);
+    ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   }
   ctx.restore();
-  ctx.strokeStyle=ac;ctx.lineWidth=3;
-  ctx.beginPath();ctx.arc(94,116,60,0,Math.PI*2);ctx.stroke();
 
-  ctx.fillStyle='#fff';ctx.font='bold 25px sans-serif';
-  ctx.fillText(d.nombre,182,87);
-  ctx.fillStyle=ac+'33';
-  rrect(ctx,182,96,ctx.measureText(d.rol).width+22,25,6);
-  ctx.fillStyle=ac;ctx.font='bold 12px sans-serif';
-  ctx.fillText(d.rol,193,113);
+  // Nombre bajo avatar
+  ctx.fillStyle='#ffffff'; ctx.font='bold 14px sans-serif';
+  ctx.textAlign='center';
+  const nombre1=d.nombre.split(' ').slice(0,2).join(' ');
+  const nombre2=d.nombre.split(' ').slice(2).join(' ');
+  ctx.fillText(nombre1,cx2,235);
+  if(nombre2) ctx.fillText(nombre2,cx2,252);
+  ctx.textAlign='left';
 
-  const c1=182,c2=505,y0=155,stp=43;
-  const rows=[
-    [{l:'Cédula',v:d.ci||'—'},{l:'Teléfono',v:d.tel||'—'}],
-    [{l:'Unidad',v:d.unidad||'—'},{l:'Placa',v:d.placa||'—'}],
-    [{l:'Marca / Modelo',v:d.marca+(d.año?' ('+d.año+')':'')},{l:'Cap. de carga',v:d.capacidad||'—'}],
-    [{l:'Cestas 2.2 kg',v:d.cestas?d.cestas+' cestas':'—'},{l:'Thermo King',v:d.thermo?'✅ Sí tiene':'No tiene'}],
-    [{l:'Dirección',v:d.dir||'—'},{l:'',v:''}],
-  ];
-  rows.forEach((row,ri)=>{
-    if(ri>0){ctx.strokeStyle='#252d42';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(182,y0+ri*stp-13);ctx.lineTo(W-22,y0+ri*stp-13);ctx.stroke();}
-    row.forEach((item,ci)=>{
-      const x=ci===0?c1:c2,y=y0+ri*stp;
-      ctx.fillStyle='#6b7794';ctx.font='10px sans-serif';ctx.fillText(item.l.toUpperCase(),x,y);
-      ctx.fillStyle='#e8eaf0';ctx.font='bold 14px sans-serif';
-      ctx.fillText(item.v.length>33?item.v.slice(0,31)+'…':item.v,x,y+17);
-    });
-  });
-  ctx.strokeStyle='#252d42';ctx.lineWidth=.7;ctx.beginPath();ctx.moveTo(485,y0-7);ctx.lineTo(485,y0+rows.length*stp-10);ctx.stroke();
+  // Badge rol
+  const rolTxt=d.rol.toUpperCase();
+  const rolW2=ctx.measureText(rolTxt).width+24;
+  const rolX=cx2-rolW2/2;
+  const rolY=nombre2?262:248;
+  ctx.fillStyle=ac;
+  rrect(ctx,rolX,rolY,rolW2,22,11);
+  ctx.fillStyle='#fff'; ctx.font='bold 10px sans-serif';
+  ctx.textAlign='center'; ctx.fillText(rolTxt,cx2,rolY+15); ctx.textAlign='left';
 
-  if(d.ciPhoto){
-    const cy=y0+rows.length*stp+12;
-    ctx.fillStyle='#1a2035';rrect(ctx,22,cy,W-44,108,10);
-    ctx.fillStyle='#6b7794';ctx.font='10px sans-serif';ctx.fillText('DOCUMENTO DE IDENTIDAD',36,cy+17);
-    await dimg(ctx,d.ciPhoto,36,cy+21,W-44-28,78,'contain');
+  // Unidad badge grande
+  if(d.unidad){
+    ctx.fillStyle='rgba(255,255,255,0.07)';
+    rrect(ctx,14,rolY+32,panelW-28,38,8);
+    ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='9px sans-serif';
+    ctx.textAlign='center'; ctx.fillText('UNIDAD ASIGNADA',cx2,rolY+47);
+    ctx.fillStyle='#ffffff'; ctx.font='bold 18px sans-serif';
+    ctx.fillText(d.unidad,cx2,rolY+64); ctx.textAlign='left';
   }
 
+  // Thermo badge
+  if(d.thermo){
+    ctx.fillStyle='#00c9a733';
+    rrect(ctx,14,rolY+80,panelW-28,28,8);
+    ctx.fillStyle='#00c9a7'; ctx.font='bold 11px sans-serif';
+    ctx.textAlign='center'; ctx.fillText('❄️  THERMO KING',cx2,rolY+99); ctx.textAlign='left';
+  }
+
+  // ── PANEL DERECHO (datos) ──
+  const rx=panelW+24, ry=88, rw=W-panelW-44;
+
+  function dataBlock(label,value,x,y,w){
+    ctx.fillStyle='rgba(255,255,255,0.05)';
+    rrect(ctx,x,y,w,52,8);
+    ctx.fillStyle=ac; ctx.font='bold 9px sans-serif';
+    ctx.fillText(label.toUpperCase(),x+12,y+16);
+    ctx.strokeStyle=ac+'44'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x+12,y+20); ctx.lineTo(x+w-12,y+20); ctx.stroke();
+    ctx.fillStyle='#ffffff'; ctx.font='bold 14px sans-serif';
+    const v=value&&value.length>22?value.slice(0,20)+'…':value||'—';
+    ctx.fillText(v,x+12,y+40);
+  }
+
+  const col1=rx, col2=rx+rw/2+8, bw=(rw-16)/2, bh=52, gap=10;
+
+  dataBlock('Cédula de Identidad', d.ci, col1, ry, bw);
+  dataBlock('Teléfono', d.tel, col2, ry, bw);
+  dataBlock('Placa', d.placa, col1, ry+bh+gap, bw);
+  dataBlock('Marca / Modelo', d.marca+(d.año?' ('+d.año+')':''), col2, ry+bh+gap, bw);
+  dataBlock('Capacidad de Carga', d.capacidad, col1, ry+(bh+gap)*2, bw);
+  dataBlock('Cestas 2.2 kg', d.cestas?d.cestas+' cestas':'—', col2, ry+(bh+gap)*2, bw);
+
+  // Dirección full width
+  if(d.dir){
+    ctx.fillStyle='rgba(255,255,255,0.05)';
+    rrect(ctx,col1,ry+(bh+gap)*3,rw,52,8);
+    ctx.fillStyle=ac; ctx.font='bold 9px sans-serif';
+    ctx.fillText('DIRECCIÓN / ZONA DE RESIDENCIA',col1+12,ry+(bh+gap)*3+16);
+    ctx.strokeStyle=ac+'44'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(col1+12,ry+(bh+gap)*3+20); ctx.lineTo(col1+rw-12,ry+(bh+gap)*3+20); ctx.stroke();
+    ctx.fillStyle='#ffffff'; ctx.font='bold 13px sans-serif';
+    ctx.fillText(d.dir.length>45?d.dir.slice(0,43)+'…':d.dir,col1+12,ry+(bh+gap)*3+40);
+  }
+
+  // ── FOTO CI ABAJO ──
+  const ciY=ry+(bh+gap)*4+4;
+  if(d.ciPhoto && ciY+80 < H-20){
+    ctx.fillStyle='rgba(255,255,255,0.04)';
+    rrect(ctx,col1,ciY,rw,H-ciY-16,8);
+    ctx.fillStyle=ac; ctx.font='bold 9px sans-serif';
+    ctx.fillText('DOCUMENTO DE IDENTIDAD',col1+12,ciY+16);
+    ctx.strokeStyle=ac+'33'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(col1+12,ciY+20); ctx.lineTo(col1+rw-12,ciY+20); ctx.stroke();
+    await dimg(ctx,d.ciPhoto,col1+10,ciY+24,rw-20,H-ciY-42,'contain');
+  }
+
+  // ── FOOTER ──
+  ctx.fillStyle='rgba(255,255,255,0.08)';
+  ctx.fillRect(0,H-24,W,24);
   const fecha=new Date().toLocaleDateString('es-VE',{day:'2-digit',month:'long',year:'numeric'});
-  ctx.fillStyle='#6b7794';ctx.font='10px sans-serif';
-  ctx.fillText('Generado: '+fecha+' · Dpto. Transporte · Emporium',22,H-11);
+  ctx.fillStyle='rgba(255,255,255,0.4)'; ctx.font='9px sans-serif';
+  ctx.fillText('Emporium · Dpto. de Transporte · Generado: '+fecha,14,H-8);
+  ctx.textAlign='right';
+  ctx.fillText('directorio-flota.vercel.app',W-14,H-8);
+  ctx.textAlign='left';
 
   return cv;
 }
